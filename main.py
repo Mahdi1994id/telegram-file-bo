@@ -1,5 +1,7 @@
 from telegram import Update
 from telegram.ext import ApplicationBuilder, MessageHandler, ContextTypes, filters
+import os
+TOKEN = os.environ.get("7282248867:AAFevE-HJ9dOup6n5UooBkwnnCTahIAbxfU")
 
 BOT_TOKEN = '7282248867:AAFevE-HJ9dOup6n5UooBkwnnCTahIAbxfU'
 
