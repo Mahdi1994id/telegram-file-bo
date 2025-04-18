@@ -1,35 +1,32 @@
-from telegram import Update
-from telegram.ext import ApplicationBuilder, MessageHandler, ContextTypes, filters
 import os
-TOKEN = os.environ.get("7282248867:AAFevE-HJ9dOup6n5UooBkwnnCTahIAbxfU")
+from telegram import Update
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
 
-BOT_TOKEN = '7282248867:AAFevE-HJ9dOup6n5UooBkwnnCTahIAbxfU'
+TOKEN = os.getenv("TOKEN")  # توکن رو از محیط بخون
 
-async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    message = update.message
+def start(update: Update, context: CallbackContext):
+    update.message.reply_text("سلام! فایل بفرست تا لینکشو بدم 👌")
 
-    file = None
+def handle_file(update: Update, context: CallbackContext):
+    try:
+        file = update.message.document or update.message.video or update.message.audio or update.message.photo[-1]
+        file_id = file.file_id
+        file_obj = context.bot.get_file(file_id)
+        download_link = f"https://api.telegram.org/file/bot{context.bot.token}/{file_obj.file_path}"
+        update.message.reply_text(f"🔗 لینک دانلود مستقیم:\n{download_link}")
+    except Exception as e:
+        print(f"Error: {e}")
+        update.message.reply_text("❌ خطایی در دریافت لینک پیش اومد.")
 
-    if message.document:
-        file = await message.document.get_file()
-    elif message.photo:
-        file = await message.photo[-1].get_file()
-    elif message.video:
-        file = await message.video.get_file()
-    elif message.audio:
-        file = await message.audio.get_file()
-    elif message.voice:
-        file = await message.voice.get_file()
-    elif message.sticker:
-        file = await message.sticker.get_file()
+def main():
+    updater = Updater(token=TOKEN, use_context=True)
+    dispatcher = updater.dispatcher
 
-    if file:
-        await message.reply_text(f"✅ لینک دانلود فایل:\n{file.file_path}")
-    else:
-        await message.reply_text("⚠️ لطفاً یک فایل (عکس، ویدیو، داکیومنت و...) بفرست یا فوروارد کن.")
+    dispatcher.add_handler(CommandHandler("start", start))
+    dispatcher.add_handler(MessageHandler(Filters.document | Filters.video | Filters.audio | Filters.photo, handle_file))
+
+    updater.start_polling()
+    updater.idle()
 
 if __name__ == '__main__':
-    app = ApplicationBuilder().token(BOT_TOKEN).build()
-    app.add_handler(MessageHandler(filters.ALL, handle_file))
-    print("🤖 ربات راه‌اندازی شد...")
-    app.run_polling()
+    main()
